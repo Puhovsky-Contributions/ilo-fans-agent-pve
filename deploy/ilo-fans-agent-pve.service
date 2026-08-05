@@ -1,0 +1,16 @@
+[Unit]
+Description=ilo-fans-agent-pve thermal collector for IFC
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/opt/ilo-fans-agent-pve/bin/ilo-fans-agent-pve -config /etc/ilo-fans-agent-pve/config.yaml
+Restart=on-failure
+RestartSec=5
+# %RUN_USER% %RUN_GROUP% substituted by install.sh (commented when root)
+# User=%RUN_USER%
+# Group=%RUN_GROUP%
+
+[Install]
+WantedBy=multi-user.target

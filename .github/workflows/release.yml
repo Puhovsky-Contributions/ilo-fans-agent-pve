@@ -1,0 +1,39 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Build linux-amd64 and pack assets
+        run: |
+          set -euo pipefail
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" \
+            -o ilo-fans-agent-pve ./cmd/ilo-fans-agent-pve
+          VERSION="${GITHUB_REF_NAME#v}"
+          BASE="ilo-fans-agent-pve_${VERSION}_linux_amd64"
+
+          mkdir -p "dist/${BASE}"
+          cp ilo-fans-agent-pve "dist/${BASE}/"
+          cp config.yaml.example "dist/${BASE}/"
+          cp -r deploy scripts "dist/${BASE}/"
+          tar -czf "${BASE}_build.tar.gz" -C dist "${BASE}"
+
+          sha256sum "${BASE}_build.tar.gz" > SHA256SUMS
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            ilo-fans-agent-pve_*_linux_amd64_build.tar.gz
+            SHA256SUMS

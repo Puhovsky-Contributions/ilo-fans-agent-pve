@@ -1,0 +1,11 @@
+listen: "172.16.0.10:9847"
+token_file: /var/lib/ilo-fans-agent-pve/token
+
+run_as:
+  user: root
+  group: root
+
+collectors:
+  smartctl_path: /usr/sbin/smartctl
+  # smartctl_use_sudo: false
+  sensors_path: /usr/bin/sensors
