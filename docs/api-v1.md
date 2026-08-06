@@ -13,7 +13,7 @@ Response:
 ```json
 {
   "cpu": [{"name": "Package id 0", "temp": 42}, {"name": "Core 0", "temp": 38}],
-  "disks": [{"devpath": "/dev/sda", "label": "sda (MODEL)", "temp": 35, "model": "MODEL"}],
+  "disks": [{"devpath": "/dev/sda", "label": "sda · S3Z1NX0K123456", "temp": 35, "model": "MODEL", "serial": "S3Z1NX0K123456", "wwn": "0x5002538..."}],
   "meta": {
     "cpu": {
       "attempted": true,
