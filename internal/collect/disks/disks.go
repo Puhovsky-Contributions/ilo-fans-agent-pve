@@ -15,6 +15,8 @@ type DiskReading struct {
 	Label   string `json:"label"`
 	Temp    int    `json:"temp"`
 	Model   string `json:"model"`
+	Serial  string `json:"serial,omitempty"`
+	WWN     string `json:"wwn,omitempty"`
 }
 
 type CollectOpts struct {
@@ -23,10 +25,12 @@ type CollectOpts struct {
 }
 
 var (
-	reTemp1 = regexp.MustCompile(`(?i)Temperature:\s+(\d+)\s+Celsius`)
-	reTemp2 = regexp.MustCompile(`(?i)Current Drive Temperature:\s*(\d+)\s*C`)
-	reTemp3 = regexp.MustCompile(`(?i)Temperature Sensor \d+:\s+(\d+)\s+Celsius`)
-	rePart  = regexp.MustCompile(`^(sd[a-z]+[0-9]+|nvme[0-9]+n[0-9]+p[0-9]+)$`)
+	reTemp1   = regexp.MustCompile(`(?i)Temperature:\s+(\d+)\s+Celsius`)
+	reTemp2   = regexp.MustCompile(`(?i)Current Drive Temperature:\s*(\d+)\s*C`)
+	reTemp3   = regexp.MustCompile(`(?i)Temperature Sensor \d+:\s+(\d+)\s+Celsius`)
+	rePart    = regexp.MustCompile(`^(sd[a-z]+[0-9]+|nvme[0-9]+n[0-9]+p[0-9]+)$`)
+	reSerial  = regexp.MustCompile(`(?i)^Serial [Nn]umber:\s*(.+)$`)
+	reWWN     = regexp.MustCompile(`(?i)^(?:LU )?WWN(?: Device Id)?:\s*(.+)$`)
 )
 
 func Collect(opts CollectOpts) []DiskReading {
@@ -56,15 +60,60 @@ func Collect(opts CollectOpts) []DiskReading {
 		if model == "" {
 			model = "unknown"
 		}
+		serial, wwn := parseSmartIdentity(out)
 		short := filepath.Base(devpath)
+		id := diskIdentity(serial, wwn, model)
 		result = append(result, DiskReading{
 			Devpath: devpath,
-			Label:   short + " (" + model + ")",
+			Label:   short + " (" + id + ")",
 			Temp:    *temp,
 			Model:   model,
+			Serial:  serial,
+			WWN:     wwn,
 		})
 	}
 	return result
+}
+
+func diskIdentity(serial, wwn, model string) string {
+	s := strings.TrimSpace(serial)
+	if s != "" && !strings.EqualFold(s, "unknown") {
+		return s
+	}
+	w := strings.TrimSpace(wwn)
+	if w != "" && !strings.EqualFold(w, "unknown") {
+		return normalizeWWN(w)
+	}
+	if len(model) > 28 {
+		return model[:12] + "…" + model[len(model)-8:]
+	}
+	if model != "" {
+		return model
+	}
+	return "unknown"
+}
+
+func normalizeWWN(w string) string {
+	w = strings.TrimSpace(w)
+	w = strings.ReplaceAll(w, " ", "")
+	if strings.HasPrefix(strings.ToLower(w), "0x") {
+		return strings.ToLower(w)
+	}
+	return w
+}
+
+func parseSmartIdentity(text string) (serial, wwn string) {
+	for _, line := range strings.Split(text, "\n") {
+		line = strings.TrimSpace(line)
+		if m := reSerial.FindStringSubmatch(line); m != nil {
+			serial = strings.TrimSpace(m[1])
+			continue
+		}
+		if m := reWWN.FindStringSubmatch(line); m != nil {
+			wwn = normalizeWWN(strings.TrimSpace(m[1]))
+		}
+	}
+	return serial, wwn
 }
 
 func runSmartctl(opts CollectOpts, devpath string) (string, error) {
