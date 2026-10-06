@@ -29,4 +29,5 @@ Response:
 
 # GET /health
 
-No auth. `{"status":"ok"}`
+No auth. `{"status":"ok","version":"<ver>"}`
+

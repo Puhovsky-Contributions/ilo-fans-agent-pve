@@ -19,9 +19,11 @@ jobs:
       - name: Build linux-amd64 and pack assets
         run: |
           set -euo pipefail
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" \
-            -o ilo-fans-agent-pve ./cmd/ilo-fans-agent-pve
           VERSION="${GITHUB_REF_NAME#v}"
+          BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          LDFLAGS="-s -w -X github.com/Puhovsky-Contributions/ilo-fans-agent-pve/internal/version.Version=${VERSION} -X github.com/Puhovsky-Contributions/ilo-fans-agent-pve/internal/version.Commit=${GITHUB_SHA} -X github.com/Puhovsky-Contributions/ilo-fans-agent-pve/internal/version.Date=${BUILD_DATE}"
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="${LDFLAGS}" \
+            -o ilo-fans-agent-pve ./cmd/ilo-fans-agent-pve
           BASE="ilo-fans-agent-pve_${VERSION}_linux_amd64"
 
           mkdir -p "dist/${BASE}"

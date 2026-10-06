@@ -2,7 +2,7 @@
 
 Small HTTP agent on each Proxmox node. Exposes host CPU (`sensors`) and disk SMART temps for [IFC](https://github.com/Puhovsky-Contributions/ifc) fan control — no Proxmox API token or SSH from IFC.
 
-- `GET /health` — liveness
+- `GET /health` — liveness and version
 - `GET /v1/thermal` — Bearer auth, JSON `cpu` + `disks`
 
 See [docs/install.md](docs/install.md), [docs/api-v1.md](docs/api-v1.md), [docs/run-as.md](docs/run-as.md).
@@ -23,6 +23,15 @@ GitHub Release assets:
 
 - `ilo-fans-agent-pve_<ver>_linux_amd64_build.tar.gz` — binary + `config.yaml.example`, `deploy/`, `scripts/` (install/upgrade; see [docs/install.md](docs/install.md) in repo)
 - `SHA256SUMS` — checksum for the build archive
+
+## Version
+
+```bash
+ilo-fans-agent-pve version
+ilo-fans-agent-pve version --short
+ilo-fans-agent-pve -v
+ilo-fans-agent-pve --version -s
+```
 
 ## Token
 

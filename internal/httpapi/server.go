@@ -9,6 +9,7 @@ import (
 	"github.com/Puhovsky-Contributions/ilo-fans-agent-pve/internal/collect/cpu"
 	"github.com/Puhovsky-Contributions/ilo-fans-agent-pve/internal/collect/disks"
 	"github.com/Puhovsky-Contributions/ilo-fans-agent-pve/internal/config"
+	"github.com/Puhovsky-Contributions/ilo-fans-agent-pve/internal/version"
 )
 
 type Server struct {
@@ -41,7 +42,10 @@ func (s *Server) Handler() http.Handler {
 
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+	_ = json.NewEncoder(w).Encode(map[string]string{
+		"status":  "ok",
+		"version": version.Get().Short(),
+	})
 }
 
 func (s *Server) handleThermal(w http.ResponseWriter, r *http.Request) {

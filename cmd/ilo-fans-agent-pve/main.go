@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -12,10 +13,22 @@ import (
 	"github.com/Puhovsky-Contributions/ilo-fans-agent-pve/internal/auth"
 	"github.com/Puhovsky-Contributions/ilo-fans-agent-pve/internal/config"
 	"github.com/Puhovsky-Contributions/ilo-fans-agent-pve/internal/httpapi"
+	"github.com/Puhovsky-Contributions/ilo-fans-agent-pve/internal/version"
 )
 
 func main() {
+	if handleVersion(os.Args[1:], os.Stdout) {
+		return
+	}
+
 	configPath := flag.String("config", "/etc/ilo-fans-agent-pve/config.yaml", "path to config.yaml")
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s:\n", os.Args[0])
+		flag.PrintDefaults()
+		fmt.Fprintln(flag.CommandLine.Output(), "\nCommands:")
+		fmt.Fprintln(flag.CommandLine.Output(), "  version [--short|-s]    show agent version and build information")
+		fmt.Fprintln(flag.CommandLine.Output(), "  token init|rotate|show  manage bearer auth token")
+	}
 	flag.Parse()
 
 	args := flag.Args()
@@ -55,6 +68,43 @@ func main() {
 	log.Printf("listening on %s", cfg.Listen)
 	if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
+	}
+}
+
+func handleVersion(args []string, out io.Writer) bool {
+	if len(args) == 0 {
+		return false
+	}
+	var isVersion bool
+	var remaining []string
+	for _, arg := range args {
+		switch arg {
+		case "version", "-v", "-version", "--version":
+			isVersion = true
+		default:
+			remaining = append(remaining, arg)
+		}
+	}
+	if !isVersion {
+		return false
+	}
+	runVersionCLI(remaining, out)
+	return true
+}
+
+func runVersionCLI(args []string, out io.Writer) {
+	var short bool
+	for _, a := range args {
+		if a == "--short" || a == "-short" || a == "-s" || a == "--s" {
+			short = true
+			break
+		}
+	}
+	info := version.Get()
+	if short {
+		fmt.Fprintln(out, info.Short())
+	} else {
+		fmt.Fprintln(out, info.String())
 	}
 }
 
