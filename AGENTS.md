@@ -20,4 +20,4 @@ Canonical five-role triage labels (`needs-triage`, `needs-info`, `ready-for-agen
 
 ### Domain docs
 
-Single-context layout (`CONTEXT.md` at root, ADRs in `docs/adr/`). See `docs/agents/domain.md`.
+Single-context layout (`GLOSSARY.md` at root, ADRs in `docs/adr/`). See `docs/agents/domain.md`.
